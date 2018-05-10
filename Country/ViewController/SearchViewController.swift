@@ -19,6 +19,8 @@ class SearchViewController: UIViewController {
     fileprivate let bag = DisposeBag()
     var viewModel : SearchViewModel!
     
+    var category : CATEGORY = .all
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -41,7 +43,7 @@ class SearchViewController: UIViewController {
         searchController?.obscuresBackgroundDuringPresentation = false
         searchController?.searchBar.placeholder = "Search Countries"
         
-        searchController?.searchBar.scopeButtonTitles = ["All", "Name", "Capital", "Currency", "Region"]
+        searchController?.searchBar.scopeButtonTitles = ["Name", "Capital", "Currency", "Region"]
         searchController?.searchBar.delegate = self
         
         definesPresentationContext = true
@@ -81,13 +83,16 @@ class SearchViewController: UIViewController {
         
         searchController?.searchBar.rx
             .text
-            .bind(to: viewModel.searchText)
+            .map{ searchKey in
+                return (self.category, searchKey)
+            }
+            .bind(to: viewModel.searchTuple)
             .disposed(by: bag)
         
         searchController?.searchBar.rx
             .cancelButtonClicked
-            .map{""}
-            .bind(to: viewModel.searchText)
+            .map{ return (.all, "") }
+            .bind(to: viewModel.searchTuple)
             .disposed(by: bag)
     }
 
@@ -95,7 +100,8 @@ class SearchViewController: UIViewController {
 
 extension SearchViewController : UISearchBarDelegate {    
     func searchBar(_ searchBar: UISearchBar, selectedScopeButtonIndexDidChange selectedScope: Int) {
-        viewModel.category.value = CATEGORY(rawValue: selectedScope)!
+        self.category = CATEGORY(rawValue: selectedScope)!
+        viewModel.searchTuple.value = (self.category, searchBar.text)
     }
 }
 

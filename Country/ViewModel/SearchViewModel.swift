@@ -13,11 +13,11 @@ import Moya
 import ObjectMapper
 
 enum CATEGORY : Int {
-    case all = 0
-    case name
+    case name = 0
     case capital
     case currency
     case region
+    case all
 }
 
 class SearchViewModel {
@@ -28,29 +28,30 @@ class SearchViewModel {
     // MARK: - Output
     var countryList : Variable<[Country]>
     
-    var searchText : Variable<String?>
+    var searchTuple : Variable<(CATEGORY, String?)>
     
     var isLoading :Variable<Bool>
     
-    var category : Variable<CATEGORY>
-    
     init() {
         countryList = Variable<[Country]>([])
-        searchText = Variable<String?>("")
+        searchTuple = Variable<(CATEGORY, String?)>((.all, ""))
         isLoading = Variable<Bool>(false)
-        category = Variable<CATEGORY>(.all)
-        
+
         bindOutPut()
     }
     
     
     func bindOutPut() {
     
-        searchText
+        searchTuple
             .asObservable()
-            .flatMap{ [weak self] value -> PrimitiveSequence<SingleTrait, Response> in
+            .filter {
+                if $0.0 == .all { return true }
+                return ($0.1?.count)! > 0
+            }
+            .flatMap{ [weak self] (category, key) -> PrimitiveSequence<SingleTrait, Response> in
                 self?.isLoading.value = true
-                return (self?.searchCountry(withKey: value!))!
+                return (self?.searchCountry(withKey: key!))!
             }.subscribe(onNext: { [weak self] response in
                 self?.isLoading.value = false
                 guard let data = self?.dataFromResponse(response) else {
@@ -81,7 +82,7 @@ class SearchViewModel {
         if key.count == 0 {
             return APIProvider.shared.getAllCountry()
         }
-        switch self.category.value {
+        switch self.searchTuple.value.0 {
             case .all:
                 return APIProvider.shared.getAllCountry()
             case .name:
