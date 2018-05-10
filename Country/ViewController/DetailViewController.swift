@@ -7,12 +7,18 @@
 //
 
 import UIKit
+import RxSwift
+import RxCocoa
 
 class DetailViewController: UIViewController {
+    
+    fileprivate let bag = DisposeBag()
+    var viewModel : DetailViewModel!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        bindUI()
     }
 
     override func didReceiveMemoryWarning() {
@@ -21,14 +27,15 @@ class DetailViewController: UIViewController {
     }
     
 
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
+    func bindUI() {
+        viewModel
+            .country
+            .asObservable()
+            .map {$0.name}
+            .subscribe(onNext: { [weak self] value in
+                self?.navigationItem.title = value
+            })
+            .disposed(by: bag)
     }
-    */
 
 }

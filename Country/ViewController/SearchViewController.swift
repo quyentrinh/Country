@@ -19,7 +19,7 @@ class SearchViewController: UIViewController {
     fileprivate let bag = DisposeBag()
     var viewModel : SearchViewModel!
     
-    var category : CATEGORY = .all
+    var category : CATEGORY = .name
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -75,8 +75,8 @@ class SearchViewController: UIViewController {
             .modelSelected(Country.self)
             .subscribe(onNext: { [weak self] model in
                 let detailVC = self?.storyboard?.instantiateViewController(withIdentifier: "DetailViewController") as! DetailViewController
-//                let detailViewModel = UserDetailViewModel(user: Variable(model))
-//                detailVC.viewModel = detailViewModel
+                let viewModel = DetailViewModel(_country: Variable(model))
+                detailVC.viewModel = viewModel
                 self?.navigationController?.pushViewController(detailVC, animated: true)
             })
             .disposed(by: bag)
@@ -94,6 +94,7 @@ class SearchViewController: UIViewController {
             .map{ return (.all, "") }
             .bind(to: viewModel.searchTuple)
             .disposed(by: bag)
+        
     }
 
 }
